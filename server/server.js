@@ -13,13 +13,13 @@ require("./config/passport")(passport);
 app.use(passport.initialize());
 
 
-const userRoute = require("./routes/autRoutes");
-const profileRoute = require("./routes/profileRoutes");
+const userRoute = require("./routes/authRoutes");
+// const profileRoute = require("./routes/profileRoutes");
 const postRoute = require("./routes/postRoutes");
 
 app.use("/api/posts", postRoute);
 app.use("/api/users", userRoute);
-app.use("/api/profiles", profileRoute);
+// app.use("/api/profiles", profileRoute);
 
 dbConnect();
 app.listen(port, () => {
