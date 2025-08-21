@@ -2,16 +2,20 @@ const User = require("../models/authModel");
 const bcrypt = require("bcrypt");
 const generateToken = require("../utils/generateToken");
 
+// Sign Up Controller
 const signUpUser = async (req, res) => {
   try {
+    // Extract details from body
     const { firstName, lastName, phoneNumber, email, password } = req.body;
 
+    // Basic validation
     if (!firstName || !lastName || !phoneNumber || !email || !password) {
       return res
         .status(400)
-        .json({ message: "Please fill in all fields", success: false });
+        .json({ message: "All fields are required", success: false });
     }
 
+    // Check if user already exists
     const alreadySignedUp = await User.findOne({ email });
     if (alreadySignedUp) {
       return res
@@ -19,8 +23,10 @@ const signUpUser = async (req, res) => {
         .json({ message: "User already exists", success: false });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create new user
     const newUser = new User({
       firstName,
       lastName,
@@ -30,10 +36,14 @@ const signUpUser = async (req, res) => {
     });
     await newUser.save();
 
-    const token = generateToken(newUser._id,res);
+    console.log("✅ New user created:", email); // debug log
 
+    // Generate token
+    const token = generateToken(newUser._id, res);
+
+    // Response
     res.status(201).json({
-      message: "User created successfully",
+      message: "User registered successfully",
       data: {
         firstName,
         lastName,
@@ -44,38 +54,47 @@ const signUpUser = async (req, res) => {
       success: true,
     });
   } catch (err) {
-    console.log("Error in signUpUser:", err);
-    res.status(500).json({ message: "Internal Server error", success: false });
+    console.log("❌ Error in signUpUser:", err);
+    res.status(500).json({ message: "Internal Server Error", success: false });
   }
 };
 
+// Sign In Controller
 const signInUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate inputs
     if (!email || !password) {
       return res
         .status(400)
-        .json({ message: "fill all details", success: false });
+        .json({ message: "Please fill in all fields", success: false });
     }
 
+    // Check if user exists
     const existingUser = await User.findOne({ email });
-
     if (!existingUser) {
       return res
         .status(400)
-        .json({ message: "incorrect credentials", success: false });
+        .json({ message: "Incorrect credentials", success: false });
     }
-    const isMatch = await bcrypt.compare(password, existingUser.password);
 
+    // Compare password
+    const isMatch = await bcrypt.compare(password, existingUser.password);
     if (!isMatch) {
       return res
         .status(400)
-        .json({ message: "invalid email or password", success: false });
+        .json({ message: "Invalid email or password", success: false });
     }
-    const token = generateToken(existingUser._id,res);
+
+    console.log("✅ User logged in:", email); // debug log
+
+    // Generate token
+    const token = generateToken(existingUser._id, res);
+
+    // Response
     res.status(200).json({
-      message: "sign in successful",
+      message: "Sign in successful",
       data: {
         firstName: existingUser.firstName,
         lastName: existingUser.lastName,
@@ -86,8 +105,8 @@ const signInUser = async (req, res) => {
       success: true,
     });
   } catch (err) {
-    console.log("Error in signinUser:", err);
-    res.status(500).json({ message: "Internal Server error", success: false });
+    console.log("❌ Error in signInUser:", err);
+    res.status(500).json({ message: "Internal Server Error", success: false });
   }
 };
 
