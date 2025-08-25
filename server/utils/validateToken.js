@@ -9,10 +9,8 @@ const validateToken = (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    req.user = decoded; // attach decoded user info to request
+    req.user = decoded;
 
     next();
   } catch (err) {

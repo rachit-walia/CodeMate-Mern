@@ -1,47 +1,39 @@
 const User = require("../models/authModel");
 const bcrypt = require("bcrypt");
 const generateToken = require("../utils/generateToken");
-const validator = require("validator"); // npm i validator
+const validator = require("validator");
 
-// Sign Up Controller
 const signUpUser = async (req, res) => {
   try {
     const { firstName, lastName, phoneNumber, email, password } = req.body;
 
-    // Basic validation
     if (!firstName || !lastName || !phoneNumber || !email || !password) {
       return res
         .status(400)
         .json({ message: "All fields are required", success: false });
     }
 
-    // Email validation
     if (!validator.isEmail(email)) {
       return res
         .status(400)
         .json({ message: "Invalid email format", success: false });
     }
 
-    // Password validation (min 6 chars, at least 1 number, 1 letter)
-    if (!validator.isStrongPassword(password, { minLength: 6, minLowercase: 1, minUppercase: 0, minNumbers: 1, minSymbols: 0 })) {
+    if (!validator.isStrongPassword(password)) {
       return res.status(400).json({
         message: "Password must be at least 6 characters and include a number",
         success: false,
       });
     }
 
-    // Check if user already exists
     const alreadySignedUp = await User.findOne({ email });
     if (alreadySignedUp) {
       return res
         .status(400)
         .json({ message: "User already exists", success: false });
     }
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
     const newUser = new User({
       firstName,
       lastName,
@@ -53,7 +45,6 @@ const signUpUser = async (req, res) => {
 
     console.log("✅ New user created:", email);
 
-    // Generate token
     const token = generateToken(newUser._id, res);
 
     res.status(201).json({
@@ -68,7 +59,7 @@ const signUpUser = async (req, res) => {
       success: true,
     });
   } catch (err) {
-    console.log("❌ Error in signUpUser:", err);
+    console.log("Error in signUpUser:", err);
     res.status(500).json({ message: "Internal Server Error", success: false });
   }
 };
